@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Expense Tracker</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body{
+      background:#121212;
+      color:white;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+      padding:20px;
+    }
+
+    .container{
+      width:100%;
+      max-width:900px;
+      background:#1e1e1e;
+      border-radius:20px;
+      padding:25px;
+      box-shadow:0 0 15px rgba(0,0,0,0.5);
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:20px;
+      color:#fff;
+    }
+
+    .balance-box{
+      background:#2b2b2b;
+      padding:20px;
+      border-radius:100px;
+      text-align:center;
+      margin-bottom:30px;
+    }
+
+    .balance-box h2{
+      margin-bottom:10px;
+      color:#00ff88;
+    }
+
+    .balance{
+      font-size:32px;
+      font-weight:bold;
+    }
+
+    .buttons{
+      display:flex;
+      gap:15px;
+      justify-content:center;
+      margin-bottom:25px;
+      flex-wrap:wrap;
+    }
+
+    button{
+      padding:12px 22px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:16px;
+      transition:0.3s;
+      color:white;
+    }
+
+    .income-btn{
+      background:#00c853;
+    }
+
+    .expense-btn{
+      background:#ff3d00;
+    }
+
+    button:hover{
+      opacity:0.8;
+      transform:scale(1.05);
+    }
+
+    .form-section{
+      display:none;
+      background:#2a2a2a;
+      padding:20px;
+      border-radius:10px;
+      margin-bottom:20px;
+    }
+
+    .form-section input{
+      width:100%;
+      padding:12px;
+      margin:10px 0;
+      border:none;
+      border-radius:6px;
+      outline:none;
+    }
+
+    .list{
+      margin-top:20px;
+    }
+
+    .transaction{
+      display:flex;
+      justify-content:space-between;
+      background:#2d2d2d;
+      padding:12px;
+      margin-bottom:10px;
+      border-radius:8px;
+    }
+
+    .income{
+      border-left:5px solid #00c853;
+    }
+
+    .expense{
+      border-left:5px solid #ff3d00;
+    }
+
+    canvas{
+      margin-top:30px;
+      background:white;
+      border-radius:10px;
+      padding:10px;
+    }
+.delete-btn{
+  background:#444;
+  padding:6px 12px;
+  border:none;
+  border-radius:5px;
+  color:white;
+  cursor:pointer;
+  margin-left:10px;
+}
+
+.delete-btn:hover{
+  background:red;
+}
+    @media(max-width:600px){
+      .buttons{
+        flex-direction:column;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <h1>Expense Tracker</h1>
+
+    <!-- Balance Tab -->
+    <div class="balance-box">
+      <h2>Current Balance</h2>
+      <div class="balance" id="balance">₹0</div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="buttons">
+      <button class="income-btn" onclick="showIncomeForm()">Add Income</button>
+      <button class="expense-btn" onclick="showExpenseForm()">Add Expense</button>
+    </div>
+
+    <!-- Income Form -->
+    <div class="form-section" id="incomeForm">
+      <h3>Add Income</h3>
+      <input type="text" id="incomeText" placeholder="Income Source">
+      <input type="number" id="incomeAmount" placeholder="Amount">
+      <button class="income-btn" onclick="addIncome()">Save Income</button>
+    </div>
+
+    <!-- Expense Form -->
+    <div class="form-section" id="expenseForm">
+      <h3>Add Expense</h3>
+      <input type="text" id="expenseText" placeholder="Expense Name">
+      <input type="number" id="expenseAmount" placeholder="Amount">
+      <button class="expense-btn" onclick="addExpense()">Save Expense</button>
+    </div>
+
+    <!-- Transaction List -->
+    <div class="list" id="transactionList"></div>
+
+    <!-- Pie Chart -->
+    <canvas id="expenseChart"></canvas>
+<script>
+
+function addTransaction(text, amount, type){
+
+  const div = document.createElement("div");
+
+  div.classList.add("transaction");
+  div.classList.add(type);
+
+  div.innerHTML = `
+    <span>${text}</span>
+
+    <span>
+      ${type === "income" ? "+" : "-"} ₹${amount}
+    </span>
+
+    <button class="delete-btn">
+      Delete
+    </button>
+  `;
+
+  // Delete Transaction
+  div.querySelector(".delete-btn").addEventListener("click", () => {
+
+    if(type === "income"){
+      balance -= amount;
+      incomeTotal -= amount;
+    } else {
+      balance += amount;
+      expenseTotal -= amount;
+    }
+
+    div.remove();
+
+    updateBalance();
+  });
+
+  transactionList.appendChild(div);
+}
+
+</script>
+
+  </div>
+
+  <script>
+
+    let balance = 0;
+    let incomeTotal = 0;
+    let expenseTotal = 0;
+
+    const balanceDisplay = document.getElementById("balance");
+    const transactionList = document.getElementById("transactionList");
+
+    function updateBalance(){
+      balanceDisplay.innerText = "₹" + balance;
+      updateChart();
+    }
+
+    function showIncomeForm(){
+      document.getElementById("incomeForm").style.display = "block";
+      document.getElementById("expenseForm").style.display = "none";
+    }
+
+    function showExpenseForm(){
+      document.getElementById("expenseForm").style.display = "block";
+      document.getElementById("incomeForm").style.display = "none";
+    }
+
+    function addIncome(){
+
+      const text = document.getElementById("incomeText").value;
+      const amount = Number(document.getElementById("incomeAmount").value);
+
+      if(text === "" || amount <= 0){
+        alert("Please enter valid income details");
+        return;
+      }
+
+      balance += amount;
+      incomeTotal += amount;
+
+      addTransaction(text, amount, "income");
+
+      document.getElementById("incomeText").value = "";
+      document.getElementById("incomeAmount").value = "";
+
+      updateBalance();
+    }
+
+    function addExpense(){
+
+      const text = document.getElementById("expenseText").value;
+      const amount = Number(document.getElementById("expenseAmount").value);
+
+      if(text === "" || amount <= 0){
+        alert("Please enter valid expense details");
+        return;
+      }
+
+      balance -= amount;
+      expenseTotal += amount;
+
+      addTransaction(text, amount, "expense");
+
+      document.getElementById("expenseText").value = "";
+      document.getElementById("expenseAmount").value = "";
+
+      updateBalance();
+    }
+
+    function addTransaction(text, amount, type){
+
+      const div = document.createElement("div");
+
+      div.classList.add("transaction");
+      div.classList.add(type);
+
+      div.innerHTML = `
+        <span>${text}</span>
+        <span>
+          ${type === "income" ? "+" : "-"} ₹${amount}
+        </span>
+      `;
+
+      transactionList.appendChild(div);
+    }
+
+    // Chart
+    const ctx = document.getElementById("expenseChart");
+
+    const expenseChart = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: ["Income", "Expense"],
+        datasets: [{
+          data: [incomeTotal, expenseTotal],
+          backgroundColor: [
+            "#00c853",
+            "#ff3d00"
+          ]
+        }]
+      },
+      options: {
+        responsive: true
+      }
+    });
+
+    function updateChart(){
+      expenseChart.data.datasets[0].data = [incomeTotal, expenseTotal];
+      expenseChart.update();
+    }
+
+  </script>
+
+</body>
+</html>
