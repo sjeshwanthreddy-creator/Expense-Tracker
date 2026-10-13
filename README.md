@@ -8,9 +8,6 @@ A clean, responsive, and privacy-friendly **expense tracker** built with HTML, C
 ![Chart.js](https://img.shields.io/badge/Chart.js-FF6384?logo=chartdotjs&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-> 🔗 **Live Demo:** [your-username.github.io/expense-tracker](https://your-username.github.io/expense-tracker)
-
----
 
 ## ✨ Features
 
